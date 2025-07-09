@@ -19,19 +19,23 @@
 
     // CSVをパースする簡易関数（カンマ区切り、1行目はヘッダー）
     async function fetchCsv(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      const lines = text.trim().split('\n');
-      const header = lines[0].split(',');
-      const rows = lines.slice(1);
-      return rows.map(line => {
-        const cols = line.split(',');
-        let obj = {};
-        header.forEach((h, i) => {
-          obj[h.trim()] = cols[i].trim();
-        });
-        return obj;
-      });
+      async function fetchCsv(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  const lines = text.trim().split('\n').filter(line => line.trim() !== ""); // 空行除去
+  const header = lines[0].split(',');
+  const rows = lines.slice(1);
+  return rows.map(line => {
+    const cols = line.split(',');
+    let obj = {};
+    header.forEach((h, i) => {
+      const val = cols[i] !== undefined ? cols[i].trim() : "";
+      obj[h.trim()] = val;
+    });
+    return obj;
+  });
+}
+
     }
 
     async function initMap() {
