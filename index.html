@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>スプレッドシートの位置データを地図に表示</title>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
+  <title>JSONでスプレッドシート表示</title>
   <style>
     #map { height: 100vh; width: 100%; }
   </style>
@@ -13,55 +13,47 @@
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOa9p1Vl7f2xe9YZCM6sBM7kDhQv6BFLEH0G8uzNl_u8eVu3ujxvol2CC_pxQCS49L9RlMrdpLvpJ6/pub?gid=1172053595&single=true&output=csv';
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbwtXPRpaEtY4iKHmq3vDKnysq8MMiL-i9CmqVKMnfbZjWF0vCAnqzcTbcHw0kw1Fn3amA/exec';
 
-    async function fetchCsv(url) {
+    async function fetchJson(url) {
       const res = await fetch(url);
-      const text = await res.text();
-      const lines = text.trim().split('\n').filter(line => line.trim() !== "");
-      const header = lines[0].split(',');
-      const rows = lines.slice(1);
-      return rows.map(line => {
-        const cols = line.split(',');
-        let obj = {};
-        header.forEach((h, i) => {
-          const val = cols[i] !== undefined ? cols[i].trim() : "";
-          obj[h.trim()] = val;
-        });
-        return obj;
-      });
+      if (!res.ok) throw new Error('HTTP error ' + res.status);
+      return await res.json();
     }
 
     async function initMap() {
-      const data = await fetchCsv(csvUrl);
-      console.log("取得データ:", data);
-
-      if (!data || data.length === 0) {
-        alert("CSVデータが読み込めません。URLや公開設定を確認してください。");
-        return;
-      }
-
-      const firstLat = parseFloat(data[0]['緯度']);
-      const firstLng = parseFloat(data[0]['経度']);
-
-      const map = L.map('map').setView([firstLat, firstLng], 8);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-
-      data.forEach(item => {
-        const lat = parseFloat(item['緯度']);
-        const lng = parseFloat(item['経度']);
-        const name = item['名前'] || '名称なし';
-
-        if (!isNaN(lat) && !isNaN(lng)) {
-          L.marker([lat, lng]).addTo(map).bindPopup(name);
+      try {
+        const data = await fetchJson(apiUrl);
+        if (!data.length) {
+          alert('データが空です');
+          return;
         }
-      });
+
+        const firstLat = parseFloat(data[0]['緯度']);
+        const firstLng = parseFloat(data[0]['経度']);
+        const map = L.map('map').setView([firstLat, firstLng], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        data.forEach(item => {
+          const lat = parseFloat(item['緯度']);
+          const lng = parseFloat(item['経度']);
+          const name = item['名前'] || '名称なし';
+
+          if (!isNaN(lat) && !isNaN(lng)) {
+            L.marker([lat, lng]).addTo(map).bindPopup(name);
+          }
+        });
+
+      } catch(e) {
+        alert('読み込みエラー: ' + e.message);
+      }
     }
 
     window.onload = initMap;
   </script>
 </body>
 </html>
+
