@@ -34,7 +34,7 @@
 
     async function initMap() {
       const data = await fetchCsv(csvUrl);
-      console.log("取得データ:", data); // ← ✅ ここで確認！
+      console.log("取得データ:", data); // ← ✅ ここに移動！
 
       if (!data || data.length === 0) {
         alert("CSVデータが読み込めません。URLや公開設定を確認してください。");
