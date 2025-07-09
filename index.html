@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>スプレッドシートの位置データを地図に表示</title>
+  <meta charset="utf-8" />
+  <style>
+    #map { height: 100vh; width: 100%; }
+  </style>
+  <!-- Leaflet.js CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet.js JS -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOa9p1Vl7f2xe9YZCM6sBM7kDhQv6BFLEH0G8uzNl_u8eVu3ujxvol2CC_pxQCS49L9RlMrdpLvpJ6/pubhtml';
+
+    // CSVをパースする簡易関数（カンマ区切り、1行目はヘッダー）
+    async function fetchCsv(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      const lines = text.trim().split('\n');
+      const header = lines[0].split(',');
+      const rows = lines.slice(1);
+      return rows.map(line => {
+        const cols = line.split(',');
+        let obj = {};
+        header.forEach((h, i) => {
+          obj[h.trim()] = cols[i].trim();
+        });
+        return obj;
+      });
+    }
+
+    async function initMap() {
+      const data = await fetchCsv(csvUrl);
+
+      // 地図の初期位置（最初のデータの緯度経度）
+      const firstLat = parseFloat(data[0]['緯度']);
+      const firstLng = parseFloat(data[0]['経度']);
+
+      const map = L.map('map').setView([firstLat, firstLng], 8);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      data.forEach(item => {
+        const lat = parseFloat(item['緯度']);
+        const lng = parseFloat(item['経度']);
+        const name = item['名前'] || '名称なし';
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          L.marker([lat, lng]).addTo(map).bindPopup(name);
+        }
+      });
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
