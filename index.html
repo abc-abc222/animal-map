@@ -16,7 +16,6 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOa9p1Vl7f2xe9YZCM6sBM7kDhQv6BFLEH0G8uzNl_u8eVu3ujxvol2CC_pxQCS49L9RlMrdpLvpJ6/pub?gid=1172053595&single=true&output=csv';
 
     async function fetchCsv(url) {
-      console.log("取得データ:", data); // ←ここで中身を確認！
       const res = await fetch(url);
       const text = await res.text();
       const lines = text.trim().split('\n').filter(line => line.trim() !== "");
@@ -35,6 +34,7 @@
 
     async function initMap() {
       const data = await fetchCsv(csvUrl);
+      console.log("取得データ:", data); // ← ✅ ここで確認！
 
       if (!data || data.length === 0) {
         alert("CSVデータが読み込めません。URLや公開設定を確認してください。");
